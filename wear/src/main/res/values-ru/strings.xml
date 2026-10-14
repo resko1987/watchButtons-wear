@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Watch Buttons</string>
+    <string name="lang_chip">Язык: %1$s</string>
+    <string name="wear_dnd">Не беспокоить</string>
+    <string name="wear_dnd_desc">звук и вибрация выкл.</string>
+    <string name="wear_vibrate">Только вибрация</string>
+    <string name="wear_vibrate_desc">звук выкл., вибро вкл.</string>
+    <string name="wear_normal">Обычный режим</string>
+    <string name="wear_normal_desc">звук вкл.</string>
+    <string name="wear_custom_empty">Свои кнопки появятся после добавления в приложении на телефоне</string>
+    <string name="wear_double">×2 — второе действие</string>
+    <string name="toast_done">Выполнено</string>
+    <string name="toast_error">Ошибка: %1$s</string>
+    <string name="toast_http_error">Ошибка HTTP %1$d</string>
+    <string name="toast_mode_failed">Не удалось изменить режим. Проверьте, выключен ли DND в настройках часов.</string>
+</resources>

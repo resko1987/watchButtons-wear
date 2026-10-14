@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Watch Buttons</string>
+    <string name="app_title">Watch Buttons</string>
+    <string name="language">Language</string>
+    <string name="settings">Settings</string>
+    <string name="settings_show_modes">Show sound mode buttons</string>
+    <string name="settings_show_response">Show server response text</string>
+    <string name="banner_permission_text">The app needs Do Not Disturb access to control sound and vibration.</string>
+    <string name="banner_permission_button">Allow access</string>
+    <string name="layout_1">1 in a row</string>
+    <string name="layout_2">2 in a row</string>
+    <string name="layout_3">3 in a row</string>
+    <string name="layout_center">Centered</string>
+    <string name="section_modes">Modes</string>
+    <string name="mode_dnd">Do Not Disturb</string>
+    <string name="mode_dnd_desc">Sound and vibration off everywhere</string>
+    <string name="mode_vibrate">Vibration only</string>
+    <string name="mode_vibrate_desc">Ring volume to minimum, vibration stays</string>
+    <string name="mode_normal">Normal mode</string>
+    <string name="mode_normal_desc">Notifications with sound</string>
+    <string name="section_custom">Custom buttons (GET/POST)</string>
+    <string name="custom_empty">No buttons yet. Tap «+» to create a button with a URL address.</string>
+    <string name="custom_hint">Single tap — first action, fast double tap — second action. Long press — edit.</string>
+    <string name="toast_dnd">Do Not Disturb: sound and vibration off</string>
+    <string name="toast_vibrate">Sound off, vibration stays</string>
+    <string name="toast_normal">Normal mode: sound on</string>
+    <string name="toast_done">Done</string>
+    <string name="toast_error">Error: %1$s</string>
+    <string name="toast_http_error">HTTP error %1$d</string>
+    <string name="toast_removed">Button «%1$s» removed</string>
+    <string name="dialog_new">New button</string>
+    <string name="dialog_edit">Edit button</string>
+    <string name="field_name">Name</string>
+    <string name="field_url">URL or IP address</string>
+    <string name="field_body">Request body (JSON)</string>
+    <string name="label_color">Button color</string>
+    <string name="label_single">Single tap</string>
+    <string name="label_double">Double tap — second action</string>
+    <string name="btn_save">Save</string>
+    <string name="btn_done">Done</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_delete">Delete button</string>
+    <string name="confirm_delete">Delete button «%1$s»?</string>
+    <string name="toast_mode_failed">Failed to change mode. Grant Do Not Disturb access in settings.</string>
+</resources>

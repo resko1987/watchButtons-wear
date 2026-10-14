@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Watch Buttons</string>
+    <string name="lang_chip">Language: %1$s</string>
+    <string name="wear_dnd">Do Not Disturb</string>
+    <string name="wear_dnd_desc">sound and vibration off</string>
+    <string name="wear_vibrate">Vibration only</string>
+    <string name="wear_vibrate_desc">sound off, vibration on</string>
+    <string name="wear_normal">Normal mode</string>
+    <string name="wear_normal_desc">sound on</string>
+    <string name="wear_custom_empty">Custom buttons appear after adding them in the phone app</string>
+    <string name="wear_double">×2 — second action</string>
+    <string name="toast_done">Done</string>
+    <string name="toast_error">Error: %1$s</string>
+    <string name="toast_http_error">HTTP error %1$d</string>
+    <string name="toast_mode_failed">Failed to change mode. Check that Do Not Disturb is off in watch settings.</string>
+</resources>

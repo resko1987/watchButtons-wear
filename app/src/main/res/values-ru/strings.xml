@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Watch Buttons</string>
+    <string name="app_title">Watch Buttons</string>
+    <string name="language">Язык</string>
+    <string name="settings">Настройки</string>
+    <string name="settings_show_modes">Показывать режимы звука</string>
+    <string name="settings_show_response">Показывать текст ответа сервера</string>
+    <string name="banner_permission_text">Приложению нужен доступ к режиму «Не беспокоить», чтобы управлять звуком и вибрацией.</string>
+    <string name="banner_permission_button">Разрешить доступ</string>
+    <string name="layout_1">1 в ряд</string>
+    <string name="layout_2">2 в ряд</string>
+    <string name="layout_3">3 в ряд</string>
+    <string name="layout_center">По центру</string>
+    <string name="section_modes">Режимы</string>
+    <string name="mode_dnd">Не беспокоить</string>
+    <string name="mode_dnd_desc">Звук и вибрация выключены везде</string>
+    <string name="mode_vibrate">Только вибрация</string>
+    <string name="mode_vibrate_desc">Звук звонка на минимум, вибрация остаётся</string>
+    <string name="mode_normal">Обычный режим</string>
+    <string name="mode_normal_desc">Уведомления со звуком</string>
+    <string name="section_custom">Свои кнопки (GET/POST)</string>
+    <string name="custom_empty">Пока нет кнопок. Нажмите «+», чтобы создать кнопку с URL-адресом.</string>
+    <string name="custom_hint">Один клик — первое действие, быстрый двойной — второе. Долгое нажатие — изменить.</string>
+    <string name="toast_dnd">Режим «Не беспокоить»: звук и вибрация выключены</string>
+    <string name="toast_vibrate">Звук выключен, осталась вибрация</string>
+    <string name="toast_normal">Обычный режим: звук включён</string>
+    <string name="toast_done">Выполнено</string>
+    <string name="toast_error">Ошибка: %1$s</string>
+    <string name="toast_http_error">Ошибка HTTP %1$d</string>
+    <string name="toast_removed">Кнопка «%1$s» удалена</string>
+    <string name="dialog_new">Новая кнопка</string>
+    <string name="dialog_edit">Изменить кнопку</string>
+    <string name="field_name">Название</string>
+    <string name="field_url">URL или IP-адрес</string>
+    <string name="field_body">Тело запроса (JSON)</string>
+    <string name="label_color">Цвет кнопки</string>
+    <string name="label_single">Одно нажатие</string>
+    <string name="label_double">Двойное нажатие — второе действие</string>
+    <string name="btn_save">Сохранить</string>
+    <string name="btn_done">Готово</string>
+    <string name="btn_cancel">Отмена</string>
+    <string name="btn_delete">Удалить кнопку</string>
+    <string name="confirm_delete">Удалить кнопку «%1$s»?</string>
+    <string name="toast_mode_failed">Не удалось изменить режим. Предоставьте доступ к «Не беспокоить» в настройках.</string>
+</resources>
