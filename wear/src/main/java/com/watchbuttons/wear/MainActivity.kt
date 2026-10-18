@@ -1,7 +1,13 @@
 package com.watchbuttons.wear
 
 import android.content.Context
+import android.content.Context.VIBRATOR_MANAGER_SERVICE
+import android.content.Context.VIBRATOR_SERVICE
+import android.os.Build
 import android.os.Bundle
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -102,7 +108,21 @@ class MainActivity : ComponentActivity() {
         recreate()
     }
 
+    private fun hapticTick() {
+        try {
+            val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                (getSystemService(VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
+            } else {
+                @Suppress("DEPRECATION")
+                getSystemService(VIBRATOR_SERVICE) as Vibrator
+            }
+            vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK))
+        } catch (e: Exception) {
+        }
+    }
+
     private fun applyPreset(action: String) {
+        hapticTick()
         val localOk = when (action) {
             "dnd" -> controller.doNotDisturb()
             "vibrate" -> controller.vibrateOnly()
@@ -120,6 +140,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun onCustomButtonTap(button: ButtonData) {
+        hapticTick()
         val double = button.double
         if (double == null) {
             executeAction(button, button.single)
