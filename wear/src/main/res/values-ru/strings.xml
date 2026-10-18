@@ -13,5 +13,6 @@
     <string name="toast_done">Выполнено</string>
     <string name="toast_error">Ошибка: %1$s</string>
     <string name="toast_http_error">Ошибка HTTP %1$d</string>
-    <string name="toast_mode_failed">Не удалось изменить режим. Проверьте, выключен ли DND в настройках часов.</string>
+    <string name="toast_mode_enabled">Режим включён</string>
+    <string name="toast_mode_failed">Произошла ошибка</string>
 </resources>

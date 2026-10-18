@@ -13,5 +13,6 @@
     <string name="toast_done">Done</string>
     <string name="toast_error">Error: %1$s</string>
     <string name="toast_http_error">HTTP error %1$d</string>
-    <string name="toast_mode_failed">Failed to change mode. Check that Do Not Disturb is off in watch settings.</string>
+    <string name="toast_mode_enabled">Mode enabled</string>
+    <string name="toast_mode_failed">Error</string>
 </resources>

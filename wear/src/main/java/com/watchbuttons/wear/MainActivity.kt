@@ -99,23 +99,20 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun applyPreset(action: String) {
-        val success = when (action) {
+        val localOk = when (action) {
             "dnd" -> controller.doNotDisturb()
             "vibrate" -> controller.vibrateOnly()
             "normal" -> controller.normalMode()
             else -> false
         }
-        sendCommand(this, action)
-        val label = if (success) {
-            when (action) {
-                "dnd" -> getString(R.string.wear_dnd)
-                "vibrate" -> getString(R.string.wear_vibrate)
-                else -> getString(R.string.wear_normal)
+        sendCommandWithAck(this, action) { delivered ->
+            val label = if (delivered || localOk) {
+                getString(R.string.toast_mode_enabled)
+            } else {
+                getString(R.string.toast_mode_failed)
             }
-        } else {
-            getString(R.string.toast_mode_failed)
+            Toast.makeText(this@MainActivity, label, Toast.LENGTH_SHORT).show()
         }
-        Toast.makeText(this, label, Toast.LENGTH_SHORT).show()
     }
 
     private fun onCustomButtonTap(button: ButtonData) {

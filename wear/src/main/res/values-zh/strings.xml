@@ -13,5 +13,6 @@
     <string name="toast_done">完成</string>
     <string name="toast_error">错误：%1$s</string>
     <string name="toast_http_error">HTTP 错误 %1$d</string>
-    <string name="toast_mode_failed">无法更改模式。请检查手表设置中的勿扰模式是否已关闭。</string>
+    <string name="toast_mode_enabled">模式已启用</string>
+    <string name="toast_mode_failed">发生错误</string>
 </resources>
