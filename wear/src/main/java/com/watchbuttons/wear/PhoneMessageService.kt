@@ -22,12 +22,7 @@ class PhoneMessageService : WearableListenerService() {
     override fun onDataChanged(dataEvents: com.google.android.gms.wearable.DataEventBuffer) {
         dataEvents.forEach { event ->
             if (event.dataItem.uri.path == "/buttons") {
-                store.load { buttons, layout, showModes, showResponse ->
-                    ButtonState.buttons = buttons
-                    ButtonState.layout = layout
-                    ButtonState.showModes = showModes
-                    ButtonState.showResponse = showResponse
-                }
+                store.load { state -> ButtonState.apply(state) }
             }
         }
         dataEvents.release()

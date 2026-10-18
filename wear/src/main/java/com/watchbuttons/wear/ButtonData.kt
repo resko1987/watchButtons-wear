@@ -2,6 +2,8 @@ package com.watchbuttons.wear
 
 import org.json.JSONObject
 
+const val DEFAULT_FOLDER = "default"
+
 data class ButtonAction(
     val url: String,
     val method: String = "GET",
@@ -26,7 +28,8 @@ data class ButtonData(
     val name: String,
     val color: String = "#5B8DEF",
     val single: ButtonAction,
-    val double: ButtonAction? = null
+    val double: ButtonAction? = null,
+    val folder: String = DEFAULT_FOLDER
 ) {
     fun toJson(): JSONObject {
         val o = JSONObject()
@@ -34,6 +37,7 @@ data class ButtonData(
             .put("name", name)
             .put("color", color)
             .put("single", single.toJson())
+            .put("folder", folder)
         double?.let { o.put("double", it.toJson()) }
         return o
     }
@@ -55,7 +59,8 @@ data class ButtonData(
                 name = o.optString("name"),
                 color = o.optString("color", "#5B8DEF"),
                 single = single,
-                double = double
+                double = double,
+                folder = o.optString("folder", DEFAULT_FOLDER)
             )
         }
     }

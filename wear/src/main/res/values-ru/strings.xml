@@ -15,4 +15,5 @@
     <string name="toast_http_error">Ошибка HTTP %1$d</string>
     <string name="toast_mode_enabled">Режим включён</string>
     <string name="toast_mode_failed">Произошла ошибка</string>
+    <string name="folder_default">Основной</string>
 </resources>

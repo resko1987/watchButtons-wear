@@ -43,4 +43,11 @@
     <string name="btn_delete">Удалить кнопку</string>
     <string name="confirm_delete">Удалить кнопку «%1$s»?</string>
     <string name="toast_mode_failed">Не удалось изменить режим. Предоставьте доступ к «Не беспокоить» в настройках.</string>
+    <string name="folder_default">Основной</string>
+    <string name="folders_title">Каталоги кнопок</string>
+    <string name="field_folder_name">Название каталога</string>
+    <string name="btn_add_folder">Добавить каталог</string>
+    <string name="folder_delete">Удалить</string>
+    <string name="folder_delete_hint">При удалении каталога его кнопки переносятся в основной.</string>
+    <string name="label_folder">Каталог</string>
 </resources>

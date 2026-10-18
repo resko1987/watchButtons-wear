@@ -109,6 +109,8 @@ class MainActivity : ComponentActivity() {
     private var layout by mutableStateOf("1")
     private var showModes by mutableStateOf(true)
     private var showResponse by mutableStateOf(true)
+    private var folders by mutableStateOf(listOf(DEFAULT_FOLDER))
+    private var currentFolder by mutableStateOf(DEFAULT_FOLDER)
     private var permissionGranted by mutableStateOf(false)
 
     private var pendingClick: Job? = null
@@ -124,6 +126,7 @@ class MainActivity : ComponentActivity() {
         layout = store.getLayout()
         showModes = store.getShowModes()
         showResponse = store.getShowResponse()
+        folders = store.getFolders()
         permissionGranted = controller.isPolicyAccessGranted()
         setContent {
             MaterialTheme {
@@ -230,6 +233,7 @@ class MainActivity : ComponentActivity() {
     fun AppScreen() {
         var showAddDialog by remember { mutableStateOf(false) }
         var showSettingsDialog by remember { mutableStateOf(false) }
+        var showFoldersDialog by remember { mutableStateOf(false) }
         var editCandidate by remember { mutableStateOf<ButtonData?>(null) }
 
         val presets = listOf(
@@ -255,7 +259,7 @@ class MainActivity : ComponentActivity() {
                 onClick = { applyPreset("normal") }
             )
         )
-        val custom = buttons.map {
+        val custom = buttons.filter { it.folder == currentFolder }.map {
             Entry(
                 title = it.name,
                 subtitle = actionSubtitle(it),
@@ -322,6 +326,8 @@ class MainActivity : ComponentActivity() {
                     renderEntries(presets, false)
                 }
 
+                item { FolderRow(onAddFolder = { showFoldersDialog = true }) }
+
                 item {
                     Text(
                         stringResource(R.string.section_custom),
@@ -356,16 +362,18 @@ class MainActivity : ComponentActivity() {
         if (showAddDialog || editCandidate != null) {
             ButtonDialog(
                 editing = editCandidate,
+                folders = folders,
+                initialFolder = editCandidate?.folder ?: currentFolder,
                 onDismiss = {
                     showAddDialog = false
                     editCandidate = null
                 },
-                onSave = { name, color, single, double ->
+                onSave = { name, color, single, double, folder ->
                     val editing = editCandidate
                     buttons = if (editing == null) {
-                        store.add(name, color, single, double)
+                        store.add(name, color, single, double, folder)
                     } else {
-                        store.update(editing.id, name, color, single, double)
+                        store.update(editing.id, name, color, single, double, folder)
                     }
                     showAddDialog = false
                     editCandidate = null
@@ -401,6 +409,10 @@ class MainActivity : ComponentActivity() {
                     changeLanguage(tag)
                 }
             )
+        }
+
+        if (showFoldersDialog) {
+            ManageFoldersDialog(onDismiss = { showFoldersDialog = false })
         }
     }
 
@@ -553,6 +565,100 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
+    private fun FolderRow(onAddFolder: () -> Unit) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            folders.forEach { folder ->
+                FilterChip(
+                    selected = currentFolder == folder,
+                    onClick = { currentFolder = folder },
+                    label = {
+                        Text(
+                            if (folder == DEFAULT_FOLDER) stringResource(R.string.folder_default) else folder
+                        )
+                    }
+                )
+            }
+            FilterChip(
+                selected = false,
+                onClick = onAddFolder,
+                label = {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = stringResource(R.string.btn_add_folder),
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            )
+        }
+    }
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    private fun ManageFoldersDialog(onDismiss: () -> Unit) {
+        var newName by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text(stringResource(R.string.folders_title)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        stringResource(R.string.folder_delete_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    folders.forEach { folder ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                if (folder == DEFAULT_FOLDER) stringResource(R.string.folder_default) else folder,
+                                modifier = Modifier.weight(1f)
+                            )
+                            if (folder != DEFAULT_FOLDER) {
+                                TextButton(onClick = {
+                                    folders = store.removeFolder(folder)
+                                    if (currentFolder == folder) currentFolder = DEFAULT_FOLDER
+                                }) {
+                                    Text(
+                                        stringResource(R.string.folder_delete),
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    HorizontalDivider(Modifier.padding(vertical = 4.dp))
+                    OutlinedTextField(
+                        value = newName,
+                        onValueChange = { newName = it },
+                        label = { Text(stringResource(R.string.field_folder_name)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Button(
+                        onClick = {
+                            folders = store.addFolder(newName)
+                            newName = ""
+                        },
+                        enabled = newName.isNotBlank()
+                    ) {
+                        Text(stringResource(R.string.btn_add_folder))
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = onDismiss) { Text(stringResource(R.string.btn_done)) }
+            }
+        )
+    }
+
+    @Composable
     private fun LayoutSelector() {
         val options = listOf(
             "1" to stringResource(R.string.layout_1),
@@ -670,8 +776,10 @@ class MainActivity : ComponentActivity() {
     @Composable
     private fun ButtonDialog(
         editing: ButtonData?,
+        folders: List<String>,
+        initialFolder: String,
         onDismiss: () -> Unit,
-        onSave: (String, String, ButtonAction, ButtonAction?) -> Unit,
+        onSave: (String, String, ButtonAction, ButtonAction?, String) -> Unit,
         onDelete: ((ButtonData) -> Unit)?
     ) {
         var name by remember { mutableStateOf(editing?.name ?: "") }
@@ -683,6 +791,7 @@ class MainActivity : ComponentActivity() {
         var dUrl by remember { mutableStateOf(editing?.double?.url ?: "") }
         var dMethod by remember { mutableStateOf(editing?.double?.method ?: "GET") }
         var dBody by remember { mutableStateOf(editing?.double?.body ?: "") }
+        var folder by remember { mutableStateOf(initialFolder) }
         var confirmDelete by remember { mutableStateOf(false) }
 
         AlertDialog(
@@ -735,6 +844,29 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
                             }
+                        }
+                    }
+
+                    Text(
+                        stringResource(R.string.label_folder),
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        folders.forEach { f ->
+                            FilterChip(
+                                selected = folder == f,
+                                onClick = { folder = f },
+                                label = {
+                                    Text(
+                                        if (f == DEFAULT_FOLDER) stringResource(R.string.folder_default) else f
+                                    )
+                                }
+                            )
                         }
                     }
 
@@ -805,7 +937,7 @@ class MainActivity : ComponentActivity() {
                         } else {
                             null
                         }
-                        onSave(name.trim(), color, single, double)
+                        onSave(name.trim(), color, single, double, folder)
                     },
                     enabled = name.isNotBlank() && sUrl.isNotBlank() && (!hasDouble || dUrl.isNotBlank())
                 ) {

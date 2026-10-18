@@ -93,12 +93,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        store.load { buttons, layout, showModes, showResponse ->
-            ButtonState.buttons = buttons
-            ButtonState.layout = layout
-            ButtonState.showModes = showModes
-            ButtonState.showResponse = showResponse
-        }
+        store.load { state -> ButtonState.apply(state) }
     }
 
     private fun switchLanguage() {
@@ -278,75 +273,25 @@ class MainActivity : ComponentActivity() {
                             .padding(8.dp)
                     )
                 }
-            } else if (layout == "2" || layout == "3") {
-                buttons.chunked(layout.toInt()).forEach { rowItems ->
-                    item {
-                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            rowItems.forEach { button ->
-                                val bg = hexToColor(button.color)
-                                val label = if (button.double != null) {
-                                    button.name + " ×2"
-                                } else {
-                                    button.name
-                                }
-                                CompactChip(
-                                    onClick = { onCustomButtonTap(button) },
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(40.dp),
-                                    colors = ChipDefaults.chipColors(
-                                        backgroundColor = bg,
-                                        contentColor = contentColorFor(bg)
-                                    ),
-                                    label = {
-                                        Text(
-                                            label,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
-                                )
-                            }
+            } else {
+                val folderNames = (ButtonState.folders + buttons.map { it.folder }).distinct()
+                val showHeaders = folderNames.size > 1
+                folderNames.forEach { folder ->
+                    if (showHeaders) {
+                        item {
+                            Text(
+                                if (folder == DEFAULT_FOLDER) stringResource(R.string.folder_default) else folder,
+                                style = MaterialTheme.typography.caption1,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
                         }
                     }
-                }
-            } else {
-                buttons.forEach { button ->
-                    item {
-                        val bg = hexToColor(button.color)
-                        val content = contentColorFor(bg)
-                        TitleCard(
-                            onClick = { onCustomButtonTap(button) },
-                            title = {
-                                Text(
-                                    if (button.double != null) "${button.name} ×2" else button.name,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            },
-                            modifier = if (layout == "center") Modifier.width(130.dp) else Modifier.fillMaxWidth(),
-                            backgroundPainter = ColorPainter(bg),
-                            contentColor = content,
-                            titleColor = content
-                        ) {
-                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                Text(button.single.method, style = MaterialTheme.typography.caption2)
-                                if (layout != "center") {
-                                    Text(
-                                        button.single.url,
-                                        style = MaterialTheme.typography.caption2,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                    if (button.double != null) {
-                                        Text(
-                                            stringResource(R.string.wear_double),
-                                            style = MaterialTheme.typography.caption2
-                                        )
-                                    }
-                                }
-                            }
-                        }
+                    val folderButtons = buttons.filter { it.folder == folder }
+                    if (layout == "2" || layout == "3") {
+                        folderButtonRows(folderButtons, layout)
+                    } else {
+                        folderButtonList(folderButtons, layout)
                     }
                 }
             }
@@ -366,6 +311,87 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                 )
+            }
+        }
+    }
+
+    private fun androidx.wear.compose.foundation.lazy.ScalingLazyListScope.folderButtonRows(
+        folderButtons: List<ButtonData>,
+        layout: String
+    ) {
+        folderButtons.chunked(layout.toInt()).forEach { rowItems ->
+            item {
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    rowItems.forEach { button ->
+                        val bg = hexToColor(button.color)
+                        val label = if (button.double != null) {
+                            button.name + " ×2"
+                        } else {
+                            button.name
+                        }
+                        CompactChip(
+                            onClick = { onCustomButtonTap(button) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(40.dp),
+                            colors = ChipDefaults.chipColors(
+                                backgroundColor = bg,
+                                contentColor = contentColorFor(bg)
+                            ),
+                            label = {
+                                Text(
+                                    label,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun androidx.wear.compose.foundation.lazy.ScalingLazyListScope.folderButtonList(
+        folderButtons: List<ButtonData>,
+        layout: String
+    ) {
+        folderButtons.forEach { button ->
+            item {
+                val bg = hexToColor(button.color)
+                val content = contentColorFor(bg)
+                TitleCard(
+                    onClick = { onCustomButtonTap(button) },
+                    title = {
+                        Text(
+                            if (button.double != null) "${button.name} ×2" else button.name,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    },
+                    modifier = if (layout == "center") Modifier.width(130.dp) else Modifier.fillMaxWidth(),
+                    backgroundPainter = ColorPainter(bg),
+                    contentColor = content,
+                    titleColor = content
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(button.single.method, style = MaterialTheme.typography.caption2)
+                        if (layout != "center") {
+                            Text(
+                                button.single.url,
+                                style = MaterialTheme.typography.caption2,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            if (button.double != null) {
+                                Text(
+                                    stringResource(R.string.wear_double),
+                                    style = MaterialTheme.typography.caption2
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     }

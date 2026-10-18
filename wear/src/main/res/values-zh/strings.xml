@@ -15,4 +15,5 @@
     <string name="toast_http_error">HTTP 错误 %1$d</string>
     <string name="toast_mode_enabled">模式已启用</string>
     <string name="toast_mode_failed">发生错误</string>
+    <string name="folder_default">默认</string>
 </resources>

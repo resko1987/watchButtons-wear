@@ -43,4 +43,11 @@
     <string name="btn_delete">删除按钮</string>
     <string name="confirm_delete">删除按钮「%1$s」？</string>
     <string name="toast_mode_failed">无法更改模式。请在设置中授予勿扰权限。</string>
+    <string name="folder_default">默认</string>
+    <string name="folders_title">按钮目录</string>
+    <string name="field_folder_name">目录名称</string>
+    <string name="btn_add_folder">添加目录</string>
+    <string name="folder_delete">删除</string>
+    <string name="folder_delete_hint">删除目录时，其中的按钮会移到默认目录。</string>
+    <string name="label_folder">目录</string>
 </resources>

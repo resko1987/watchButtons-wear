@@ -43,4 +43,11 @@
     <string name="btn_delete">Delete button</string>
     <string name="confirm_delete">Delete button «%1$s»?</string>
     <string name="toast_mode_failed">Failed to change mode. Grant Do Not Disturb access in settings.</string>
+    <string name="folder_default">Default</string>
+    <string name="folders_title">Button folders</string>
+    <string name="field_folder_name">Folder name</string>
+    <string name="btn_add_folder">Add folder</string>
+    <string name="folder_delete">Delete</string>
+    <string name="folder_delete_hint">When a folder is deleted, its buttons move to Default.</string>
+    <string name="label_folder">Folder</string>
 </resources>
