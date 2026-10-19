@@ -1,13 +1,8 @@
 package com.watchbuttons.wear
 
-import android.app.NotificationManager
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Context.VIBRATOR_MANAGER_SERVICE
 import android.content.Context.VIBRATOR_SERVICE
-import android.content.Intent
-import android.content.IntentFilter
-import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
@@ -46,7 +41,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
-import androidx.core.content.ContextCompat
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material.Chip
@@ -83,13 +77,6 @@ class MainActivity : ComponentActivity() {
 
     private var pendingClick: Job? = null
     private var pendingButtonId: String? = null
-    private var currentMode by mutableStateOf("normal")
-
-    private val modeReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            currentMode = controller.currentMode()
-        }
-    }
 
     override fun attachBaseContext(newBase: Context) {
         super.attachBaseContext(Language.wrapContext(newBase))
@@ -97,6 +84,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        ModeState.mode = controller.currentMode()
         setContent {
             MaterialTheme {
                 WearApp()
@@ -106,21 +94,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        currentMode = controller.currentMode()
         store.load { state -> ButtonState.apply(state) }
-        val filter = IntentFilter().apply {
-            addAction(AudioManager.RINGER_MODE_CHANGED_ACTION)
-            addAction(NotificationManager.ACTION_INTERRUPTION_FILTER_CHANGED)
-        }
-        ContextCompat.registerReceiver(this, modeReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
-    }
-
-    override fun onPause() {
-        super.onPause()
-        try {
-            unregisterReceiver(modeReceiver)
-        } catch (e: Exception) {
-        }
     }
 
     private fun switchLanguage() {
@@ -144,7 +118,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun applyPreset(action: String) {
-        if (action == currentMode) return
+        if (action == ModeState.mode) return
         hapticTick()
         val localOk = when (action) {
             "dnd" -> controller.doNotDisturb()
@@ -152,7 +126,6 @@ class MainActivity : ComponentActivity() {
             "normal" -> controller.normalMode()
             else -> false
         }
-        currentMode = controller.currentMode()
         sendCommandWithAck(this, action) { delivered ->
             val label = if (delivered || localOk) {
                 getString(R.string.toast_mode_enabled)
@@ -245,7 +218,7 @@ class MainActivity : ComponentActivity() {
                             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                 rowItems.forEach { (action, title, _) ->
                                     val bg = hexToColor(presetColors[action]!!)
-                                    val active = currentMode == action
+                                    val active = ModeState.mode == action
                                     Chip(
                                         onClick = { if (!active) applyPreset(action) },
                                         modifier = Modifier
@@ -272,7 +245,7 @@ class MainActivity : ComponentActivity() {
                     presets.forEach { (action, title, desc) ->
                         item {
                             val bg = hexToColor(presetColors[action]!!)
-                            val active = currentMode == action
+                            val active = ModeState.mode == action
                             Chip(
                                 onClick = { if (!active) applyPreset(action) },
                                 modifier = if (layout == "center") Modifier.width(120.dp) else Modifier.fillMaxWidth(),

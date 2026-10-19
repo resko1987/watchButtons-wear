@@ -4,6 +4,13 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.Context.NOTIFICATION_SERVICE
 import android.media.AudioManager
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+
+object ModeState {
+    var mode by mutableStateOf("normal")
+}
 
 class SoundController(private val context: Context) {
     private val nm = context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
@@ -17,6 +24,29 @@ class SoundController(private val context: Context) {
         AudioManager.STREAM_MUSIC,
         AudioManager.STREAM_ALARM
     )
+
+    init {
+        ModeState.mode = currentMode()
+    }
+
+    fun currentMode(): String {
+        val saved = prefs.getString("applied_mode", null)
+        if (saved != null) return saved
+        val filter = nm.currentInterruptionFilter
+        return if (
+            filter == NotificationManager.INTERRUPTION_FILTER_NONE ||
+            filter == NotificationManager.INTERRUPTION_FILTER_ALARMS
+        ) {
+            "dnd"
+        } else {
+            "normal"
+        }
+    }
+
+    private fun saveAppliedMode(mode: String) {
+        prefs.edit().putString("applied_mode", mode).apply()
+        ModeState.mode = mode
+    }
 
     private fun saveAndMute(streams: IntArray) {
         val editor = prefs.edit()
@@ -69,7 +99,9 @@ class SoundController(private val context: Context) {
         } catch (e: Exception) {
         }
         saveAndMute(allStreams)
-        return ok || ringMuted()
+        val success = ok || ringMuted()
+        if (success) saveAppliedMode("dnd")
+        return success
     }
 
     fun vibrateOnly(): Boolean {
@@ -87,7 +119,9 @@ class SoundController(private val context: Context) {
         } catch (e: Exception) {
         }
         saveAndMute(intArrayOf(AudioManager.STREAM_RING, AudioManager.STREAM_NOTIFICATION))
-        return ok || ringMuted()
+        val success = ok || ringMuted()
+        if (success) saveAppliedMode("vibrate")
+        return success
     }
 
     fun normalMode(): Boolean {
@@ -111,20 +145,8 @@ class SoundController(private val context: Context) {
         } catch (e: Exception) {
             false
         }
-        return ok || ringOn
-    }
-
-    fun currentMode(): String {
-        val filter = nm.currentInterruptionFilter
-        if (filter == NotificationManager.INTERRUPTION_FILTER_NONE ||
-            filter == NotificationManager.INTERRUPTION_FILTER_ALARMS
-        ) {
-            return "dnd"
-        }
-        return when (am.ringerMode) {
-            AudioManager.RINGER_MODE_SILENT -> "dnd"
-            AudioManager.RINGER_MODE_VIBRATE -> "vibrate"
-            else -> "normal"
-        }
+        val success = ok || ringOn
+        if (success) saveAppliedMode("normal")
+        return success
     }
 }
