@@ -113,4 +113,18 @@ class SoundController(private val context: Context) {
         }
         return ok || ringOn
     }
+
+    fun currentMode(): String {
+        val filter = nm.currentInterruptionFilter
+        if (filter == NotificationManager.INTERRUPTION_FILTER_NONE ||
+            filter == NotificationManager.INTERRUPTION_FILTER_ALARMS
+        ) {
+            return "dnd"
+        }
+        return when (am.ringerMode) {
+            AudioManager.RINGER_MODE_SILENT -> "dnd"
+            AudioManager.RINGER_MODE_VIBRATE -> "vibrate"
+            else -> "normal"
+        }
+    }
 }

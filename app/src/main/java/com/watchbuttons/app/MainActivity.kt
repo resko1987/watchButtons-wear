@@ -1,6 +1,11 @@
 package com.watchbuttons.app
 
+import android.app.NotificationManager
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.media.AudioManager
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -27,6 +32,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DoNotDisturbOnTotalSilence
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Tune
@@ -65,6 +71,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
+import androidx.core.content.ContextCompat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -96,6 +103,7 @@ private data class Entry(
     val subtitle: String,
     val color: String,
     val icon: ImageVector?,
+    val active: Boolean = false,
     val onClick: () -> Unit,
     val onLongClick: (() -> Unit)? = null
 )
@@ -112,6 +120,13 @@ class MainActivity : ComponentActivity() {
     private var folders by mutableStateOf(listOf(DEFAULT_FOLDER))
     private var currentFolder by mutableStateOf(DEFAULT_FOLDER)
     private var permissionGranted by mutableStateOf(false)
+    private var currentMode by mutableStateOf("normal")
+
+    private val modeReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            currentMode = controller.currentMode()
+        }
+    }
 
     private var pendingClick: Job? = null
     private var pendingButtonId: String? = null
@@ -140,15 +155,31 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         permissionGranted = controller.isPolicyAccessGranted()
+        currentMode = controller.currentMode()
+        val filter = IntentFilter().apply {
+            addAction(AudioManager.RINGER_MODE_CHANGED_ACTION)
+            addAction(NotificationManager.ACTION_INTERRUPTION_FILTER_CHANGED)
+        }
+        ContextCompat.registerReceiver(this, modeReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        try {
+            unregisterReceiver(modeReceiver)
+        } catch (e: Exception) {
+        }
     }
 
     private fun applyPreset(action: String) {
+        if (action == currentMode) return
         val success = when (action) {
             "dnd" -> controller.doNotDisturb()
             "vibrate" -> controller.vibrateOnly()
             "normal" -> controller.normalMode()
             else -> false
         }
+        currentMode = controller.currentMode()
         sendCommand(this, action)
         val label = if (success) {
             when (action) {
@@ -242,6 +273,7 @@ class MainActivity : ComponentActivity() {
                 subtitle = stringResource(R.string.mode_dnd_desc),
                 color = COLOR_DND,
                 icon = Icons.Default.DoNotDisturbOnTotalSilence,
+                active = currentMode == "dnd",
                 onClick = { applyPreset("dnd") }
             ),
             Entry(
@@ -249,6 +281,7 @@ class MainActivity : ComponentActivity() {
                 subtitle = stringResource(R.string.mode_vibrate_desc),
                 color = COLOR_VIBRATE,
                 icon = Icons.Default.Vibration,
+                active = currentMode == "vibrate",
                 onClick = { applyPreset("vibrate") }
             ),
             Entry(
@@ -256,6 +289,7 @@ class MainActivity : ComponentActivity() {
                 subtitle = stringResource(R.string.mode_normal_desc),
                 color = COLOR_NORMAL,
                 icon = Icons.Default.Notifications,
+                active = currentMode == "normal",
                 onClick = { applyPreset("normal") }
             )
         )
@@ -483,13 +517,15 @@ class MainActivity : ComponentActivity() {
         modifier: Modifier = Modifier
     ) {
         val bg = hexToColor(entry.color)
+        val container = if (entry.active) bg.copy(alpha = 0.55f) else bg
         val content = contentColorFor(bg)
         Card(
             modifier = modifier.combinedClickable(
+                enabled = !entry.active,
                 onClick = entry.onClick,
-                onLongClick = if (longClickable) entry.onLongClick else null
+                onLongClick = if (longClickable && !entry.active) entry.onLongClick else null
             ),
-            colors = CardDefaults.cardColors(containerColor = bg)
+            colors = CardDefaults.cardColors(containerColor = container)
         ) {
             if (compact) {
                 Column(
@@ -516,6 +552,15 @@ class MainActivity : ComponentActivity() {
                             overflow = TextOverflow.Ellipsis,
                             textAlign = TextAlign.Center
                         )
+                        if (entry.active) {
+                            Spacer(Modifier.width(6.dp))
+                            Icon(
+                                Icons.Default.Check,
+                                contentDescription = null,
+                                tint = content,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
                     }
                     if (entry.subtitle.isNotBlank()) {
                         Spacer(Modifier.height(2.dp))
@@ -557,6 +602,15 @@ class MainActivity : ComponentActivity() {
                             style = MaterialTheme.typography.bodySmall,
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                    if (entry.active) {
+                        Spacer(Modifier.width(4.dp))
+                        Icon(
+                            Icons.Default.Check,
+                            contentDescription = null,
+                            tint = content,
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
