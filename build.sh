@@ -28,8 +28,10 @@ find_jdk() {
         echo "system"; return 0
     fi
     for dir in \
+        "$HOME/tools/jdk17" \
+        "$HOME/tools/jdk" \
+        "$HOME/tools"/*jdk* \
         "$HOME/Android/Sdk/jdk" \
-        "/tmp/opencode/jdk" \
         "/opt/android-studio/jbr" \
         "$HOME/android-studio/jbr" \
         "$HOME/.local/share/JetBrains"/*/jbr \
@@ -139,11 +141,25 @@ case "$MODE" in
             echo "ОШИБКА: adb не найден в SDK"
             exit 1
         fi
-        echo ">> Установка на телефон..."
-        "$ADB" install -r app/build/outputs/apk/debug/watchButtons-debug.apk
-        echo ">> Установка на часы..."
-        "$ADB" install -r wear/build/outputs/apk/debug/watchButtons-wear-debug.apk
-        echo "Готово. Оба APK установлены."
+        DEVICES=$("$ADB" devices | awk 'NR>1 && $2=="device"{print $1}')
+        if [ -z "$DEVICES" ]; then
+            echo "ОШИБКА: нет подключённых устройств"
+            exit 1
+        fi
+        for SERIAL in $DEVICES; do
+            CHARS="$("$ADB" -s "$SERIAL" shell getprop ro.build.characteristics 2>/dev/null)"
+            case "$CHARS" in
+                *watch*)
+                    echo ">> $SERIAL: часы — ставлю watchButtons-wear-debug.apk"
+                    "$ADB" -s "$SERIAL" install -r wear/build/outputs/apk/debug/watchButtons-wear-debug.apk
+                    ;;
+                *)
+                    echo ">> $SERIAL: телефон — ставлю watchButtons-debug.apk"
+                    "$ADB" -s "$SERIAL" install -r app/build/outputs/apk/debug/watchButtons-debug.apk
+                    ;;
+            esac
+        done
+        echo "Готово."
         ;;
     *)
         echo "Неизвестный режим: $MODE (доступно: debug | release | install | clean)"
