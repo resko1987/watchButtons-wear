@@ -17,21 +17,25 @@ class SoundController(private val context: Context) {
     private val am = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     private val prefs = context.getSharedPreferences("sound_state", Context.MODE_PRIVATE)
 
-    private val allStreams = intArrayOf(
+    private val ringStreams = intArrayOf(
         AudioManager.STREAM_RING,
-        AudioManager.STREAM_NOTIFICATION,
+        AudioManager.STREAM_NOTIFICATION
+    )
+
+    private val mediaStreams = intArrayOf(
         AudioManager.STREAM_SYSTEM,
         AudioManager.STREAM_MUSIC,
         AudioManager.STREAM_ALARM
     )
+
+    private val allStreams = ringStreams + mediaStreams
 
     init {
         ModeState.mode = currentMode()
     }
 
     fun currentMode(): String {
-        val saved = prefs.getString("applied_mode", null)
-        if (saved != null) return saved
+        prefs.getString("applied_mode", null)?.let { return it }
         val filter = nm.currentInterruptionFilter
         return if (
             filter == NotificationManager.INTERRUPTION_FILTER_NONE ||
@@ -43,10 +47,75 @@ class SoundController(private val context: Context) {
         }
     }
 
-    private fun saveAppliedMode(mode: String) {
+    fun setMode(mode: String): Boolean {
+        val applied = try {
+            when (mode) {
+                "dnd" -> applyDnd()
+                "vibrate" -> applyVibrate()
+                "normal" -> applyNormal()
+                else -> false
+            }
+        } catch (e: Exception) {
+            false
+        }
         prefs.edit().putString("applied_mode", mode).apply()
         ModeState.mode = mode
+        return applied
     }
+
+    private fun applyDnd(): Boolean {
+        var ok = false
+        if (nm.isNotificationPolicyAccessGranted) {
+            ok = trySetInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_NONE) || ok
+        }
+        ok = trySetRingerMode(AudioManager.RINGER_MODE_SILENT) || ok
+        saveAndMute(allStreams)
+        return ok || allMuted()
+    }
+
+    private fun applyVibrate(): Boolean {
+        var ok = false
+        if (nm.isNotificationPolicyAccessGranted) {
+            ok = trySetInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_ALL) || ok
+        }
+        restore(mediaStreams)
+        ok = trySetRingerMode(AudioManager.RINGER_MODE_VIBRATE) || ok
+        saveAndMute(ringStreams)
+        return ok || isMuted(AudioManager.STREAM_RING)
+    }
+
+    private fun applyNormal(): Boolean {
+        var ok = false
+        if (nm.isNotificationPolicyAccessGranted) {
+            ok = trySetInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_ALL) || ok
+        }
+        val hadSavedMutes = hasSavedMutes()
+        val restored = restore(allStreams)
+        ok = trySetRingerMode(AudioManager.RINGER_MODE_NORMAL) || ok
+        return ok || restored > 0 || !hadSavedMutes
+    }
+
+    private fun trySetInterruptionFilter(filter: Int): Boolean = try {
+        nm.setInterruptionFilter(filter)
+        true
+    } catch (e: Exception) {
+        false
+    }
+
+    private fun trySetRingerMode(mode: Int): Boolean = try {
+        am.ringerMode = mode
+        true
+    } catch (e: Exception) {
+        false
+    }
+
+    private fun isMuted(stream: Int): Boolean = try {
+        am.getStreamVolume(stream) == 0
+    } catch (e: Exception) {
+        false
+    }
+
+    private fun allMuted(): Boolean = allStreams.all { isMuted(it) }
 
     private fun hasSavedMutes(): Boolean =
         prefs.all.keys.any { it.startsWith("stream_") }
@@ -82,65 +151,5 @@ class SoundController(private val context: Context) {
             }
         }
         return restored
-    }
-
-    fun doNotDisturb(): Boolean {
-        var ok = false
-        if (nm.isNotificationPolicyAccessGranted) {
-            try {
-                nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_NONE)
-                ok = true
-            } catch (e: Exception) {
-            }
-        }
-        try {
-            am.ringerMode = AudioManager.RINGER_MODE_SILENT
-            ok = true
-        } catch (e: Exception) {
-        }
-        saveAndMute(allStreams)
-        if (ok) saveAppliedMode("dnd")
-        return ok
-    }
-
-    fun vibrateOnly(): Boolean {
-        var ok = false
-        if (nm.isNotificationPolicyAccessGranted) {
-            try {
-                nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_ALL)
-                ok = true
-            } catch (e: Exception) {
-            }
-        }
-        restore(intArrayOf(AudioManager.STREAM_MUSIC, AudioManager.STREAM_ALARM, AudioManager.STREAM_SYSTEM))
-        try {
-            am.ringerMode = AudioManager.RINGER_MODE_VIBRATE
-            ok = true
-        } catch (e: Exception) {
-        }
-        saveAndMute(intArrayOf(AudioManager.STREAM_RING, AudioManager.STREAM_NOTIFICATION))
-        if (ok) saveAppliedMode("vibrate")
-        return ok
-    }
-
-    fun normalMode(): Boolean {
-        var ok = false
-        if (nm.isNotificationPolicyAccessGranted) {
-            try {
-                nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_ALL)
-                ok = true
-            } catch (e: Exception) {
-            }
-        }
-        val hadSaved = hasSavedMutes()
-        val restored = restore(allStreams)
-        try {
-            am.ringerMode = AudioManager.RINGER_MODE_NORMAL
-            ok = true
-        } catch (e: Exception) {
-        }
-        val success = ok || restored > 0 || !hadSaved
-        if (success) saveAppliedMode("normal")
-        return success
     }
 }

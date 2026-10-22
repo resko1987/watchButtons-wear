@@ -120,12 +120,7 @@ class MainActivity : ComponentActivity() {
     private fun applyPreset(action: String) {
         if (action == ModeState.mode) return
         hapticTick()
-        val localOk = when (action) {
-            "dnd" -> controller.doNotDisturb()
-            "vibrate" -> controller.vibrateOnly()
-            "normal" -> controller.normalMode()
-            else -> false
-        }
+        val localOk = controller.setMode(action)
         sendCommandWithAck(this, action) { delivered ->
             val label = if (delivered || localOk) {
                 getString(R.string.toast_mode_enabled)

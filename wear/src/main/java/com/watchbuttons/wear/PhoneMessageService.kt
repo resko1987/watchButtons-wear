@@ -13,9 +13,9 @@ class PhoneMessageService : WearableListenerService() {
         if (event.path != "/command") return
         val json = JSONObject(String(event.data))
         when (json.optString("action")) {
-            "dnd" -> controller.doNotDisturb()
-            "vibrate" -> controller.vibrateOnly()
-            "normal" -> controller.normalMode()
+            "dnd" -> controller.setMode("dnd")
+            "vibrate" -> controller.setMode("vibrate")
+            "normal" -> controller.setMode("normal")
         }
     }
 
