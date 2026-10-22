@@ -48,6 +48,9 @@ class SoundController(private val context: Context) {
         ModeState.mode = mode
     }
 
+    private fun hasSavedMutes(): Boolean =
+        prefs.all.keys.any { it.startsWith("stream_") }
+
     private fun saveAndMute(streams: IntArray) {
         val editor = prefs.edit()
         for (s in streams) {
@@ -65,23 +68,20 @@ class SoundController(private val context: Context) {
         editor.apply()
     }
 
-    private fun restore() {
-        for (s in allStreams) {
+    private fun restore(streams: IntArray): Int {
+        var restored = 0
+        for (s in streams) {
             val saved = prefs.getInt("stream_$s", -1)
             if (saved > 0) {
                 try {
                     am.setStreamVolume(s, saved, 0)
+                    restored++
                 } catch (e: Exception) {
                 }
                 prefs.edit().remove("stream_$s").apply()
             }
         }
-    }
-
-    private fun ringMuted(): Boolean = try {
-        am.getStreamVolume(AudioManager.STREAM_RING) == 0
-    } catch (e: Exception) {
-        false
+        return restored
     }
 
     fun doNotDisturb(): Boolean {
@@ -99,9 +99,8 @@ class SoundController(private val context: Context) {
         } catch (e: Exception) {
         }
         saveAndMute(allStreams)
-        val success = ok || ringMuted()
-        if (success) saveAppliedMode("dnd")
-        return success
+        if (ok) saveAppliedMode("dnd")
+        return ok
     }
 
     fun vibrateOnly(): Boolean {
@@ -113,15 +112,15 @@ class SoundController(private val context: Context) {
             } catch (e: Exception) {
             }
         }
+        restore(intArrayOf(AudioManager.STREAM_MUSIC, AudioManager.STREAM_ALARM, AudioManager.STREAM_SYSTEM))
         try {
             am.ringerMode = AudioManager.RINGER_MODE_VIBRATE
             ok = true
         } catch (e: Exception) {
         }
         saveAndMute(intArrayOf(AudioManager.STREAM_RING, AudioManager.STREAM_NOTIFICATION))
-        val success = ok || ringMuted()
-        if (success) saveAppliedMode("vibrate")
-        return success
+        if (ok) saveAppliedMode("vibrate")
+        return ok
     }
 
     fun normalMode(): Boolean {
@@ -133,19 +132,14 @@ class SoundController(private val context: Context) {
             } catch (e: Exception) {
             }
         }
+        val hadSaved = hasSavedMutes()
+        val restored = restore(allStreams)
         try {
             am.ringerMode = AudioManager.RINGER_MODE_NORMAL
             ok = true
         } catch (e: Exception) {
         }
-        restore()
-        val ringOn = try {
-            am.ringerMode == AudioManager.RINGER_MODE_NORMAL ||
-                am.getStreamVolume(AudioManager.STREAM_RING) > 0
-        } catch (e: Exception) {
-            false
-        }
-        val success = ok || ringOn
+        val success = ok || restored > 0 || !hadSaved
         if (success) saveAppliedMode("normal")
         return success
     }
